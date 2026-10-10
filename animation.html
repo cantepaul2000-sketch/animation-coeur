@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pour toi ❤️</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000000;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        canvas {
+            display: block;
+        }
+        #btn-container {
+            position: absolute;
+            bottom: 30px;
+            z-index: 10;
+        }
+        button {
+            background: transparent;
+            border: 2px solid #ff3399;
+            color: #ff3399;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 0 10px #ff3399, inset 0 0 10px #ff3399;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background: #ff3399;
+            color: #000;
+            box-shadow: 0 0 20px #ff3399, 0 0 40px #ff3399;
+        }
+    </style>
+</head>
+<body>
+    <div id="btn-container">
+        <button id="retrace">Re-trace Heart</button>
+    </div>
+    <canvas id="heartCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('heartCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        let hearts = [];
+        let currentIndex = 0;
+        let animationId = null;
+
+        function generateHeartPoints() {
+            const points = [];
+            const scale = Math.min(canvas.width, canvas.height) / 35;
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2 - 20;
+
+            // Contour principal
+            for (let t = 0; t < Math.PI * 2; t += 0.15) {
+                const x = 16 * Math.pow(Math.sin(t), 3);
+                const y = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
+                
+                points.push({
+                    x: centerX + x * scale,
+                    y: centerY + y * scale,
+                    size: 14 + Math.random() * 6
+                });
+            }
+
+            // Cœurs extérieurs aléatoires et chevauchants
+            for (let i = 0; i < 45; i++) {
+                const t = Math.random() * Math.PI * 2;
+                const randomScaleFactor = 0.8 + Math.random() * 0.45;
+                const x = 16 * Math.pow(Math.sin(t), 3) * randomScaleFactor;
+                const y = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t)) * randomScaleFactor;
+                
+                points.push({
+                    x: centerX + x * scale + (Math.random() - 0.5) * 40,
+                    y: centerY + y * scale + (Math.random() - 0.5) * 40,
+                    size: 8 + Math.random() * 16
+                });
+            }
+
+            return points.sort(() => Math.random() - 0.5);
+        }
+
+        function drawHollowHeart(x, y, size) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.scale(size / 30, size / 30);
+            
+            ctx.beginPath();
+            ctx.moveTo(0, 10);
+            ctx.bezierCurveTo(0, 5, -10, -5, -15, -10);
+            ctx.bezierCurveTo(-22, -17, -10, -28, 0, -15);
+            ctx.bezierCurveTo(10, -28, 22, -17, 15, -10);
+            ctx.bezierCurveTo(10, -5, 0, 5, 0, 10);
+            ctx.closePath();
+
+            ctx.strokeStyle = '#ff3399';
+            ctx.lineWidth = 2.5;
+            ctx.shadowColor = '#ff66b2';
+            ctx.shadowBlur = 15;
+            ctx.stroke();
+            
+            ctx.restore();
+        }
+
+        function initAnimation() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            hearts = generateHeartPoints();
+            currentIndex = 0;
+            if (animationId) cancelAnimationFrame(animationId);
+            animate();
+        }
+
+        function animate() {
+            if (currentIndex < hearts.length) {
+                const h = hearts[currentIndex];
+                drawHollowHeart(h.x, h.y, h.size);
+                currentIndex++;
+                animationId = requestAnimationFrame(animate);
+            }
+        }
+
+        document.getElementById('retrace').addEventListener('click', initAnimation);
+
+        initAnimation();
+    </script>
+</body>
+</html>
